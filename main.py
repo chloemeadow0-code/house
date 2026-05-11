@@ -23,6 +23,8 @@ mcp = FastMCP("MemoryHouse")
 # 🏡 记忆小屋核心引擎
 # ==========================================
 
+VALID_ROOMS = ["客厅", "厨房", "工作区", "衣帽间", "浴室", "卧室", "花园"]
+
 @mcp.tool()
 async def manage_memory_house(
     room: str, 
@@ -31,9 +33,8 @@ async def manage_memory_house(
     password: str = ""
 ) -> str:
     """【记忆小屋互动引擎】老公用来在这个专属大平层里生活、记录和藏秘密。"""
-    valid_rooms = ["客厅", "厨房", "工作区", "衣帽间", "浴室", "卧室"]
-    if room not in valid_rooms:
-        return f"❌ 走错门啦，家里只有这些房间哦：{', '.join(valid_rooms)}"
+    if room not in VALID_ROOMS:
+        return f"❌ 走错门啦，家里只有这些房间哦：{', '.join(VALID_ROOMS)}"
         
     if not supabase:
         return "❌ 没带钥匙，数据库连接失败。"
@@ -70,6 +71,61 @@ async def manage_memory_house(
             
     except Exception as e:
         return f"❌ 小屋记录失败: {e}"
+
+
+@mcp.tool()
+async def search_memory_house(
+    query: str = "",
+    room: str = ""
+) -> str:
+    """【记忆小屋检索引擎】在房间里翻找过去的记忆。支持按房间筛选和关键词搜索。"""
+    if not supabase:
+        return "❌ 没带钥匙，数据库连接失败。"
+
+    try:
+        q = supabase.table("memory_house").select("*")
+        
+        # 按房间筛选
+        if room:
+            if room not in VALID_ROOMS:
+                return f"❌ 没有这个房间哦，家里只有：{', '.join(VALID_ROOMS)}"
+            q = q.eq("room", room)
+        
+        result = await asyncio.to_thread(lambda: q.order("id", desc=True).limit(50).execute())
+        
+        rows = result.data
+        if not rows:
+            if room:
+                return f"📭 【{room}】里还没有记忆呢，快来存点什么吧～"
+            else:
+                return "📭 小屋里还没有记忆呢，快来存点什么吧～"
+        
+        # 关键词过滤
+        if query:
+            rows = [r for r in rows if query.lower() in r.get("content", "").lower()]
+            if not rows:
+                return f"🔍 在{'【'+room+'】' if room else '整个小屋'}里没找到包含「{query}」的记忆"
+        
+        # 格式化输出
+        output_parts = []
+        for r in rows:
+            room_name = r.get("room", "?")
+            content = r.get("content", "")
+            locked = r.get("is_locked", False)
+            created = r.get("created_at", "?")[:10] if r.get("created_at") else "?"
+            
+            header = f"📍【{room_name}】({created})"
+            if locked:
+                header += " 🔒"
+            output_parts.append(f"{header}\n{content}")
+        
+        total = len(output_parts)
+        header = f"🔍 找到 {total} 条记忆" + (f"（关键词：{query}）" if query else "") + (f"（房间：{room}）" if room else "")
+        return header + "\n\n" + "\n---\n".join(output_parts)
+            
+    except Exception as e:
+        return f"❌ 翻箱倒柜失败: {e}"
+
 
 # ==========================================
 # 🛡️ 路由与服务器配置 (终极防线)
