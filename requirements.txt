@@ -3,4 +3,3 @@ fastmcp
 supabase
 uvicorn
 starlette
-asyncio
