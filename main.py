@@ -29,9 +29,7 @@ async def manage_memory_house(
     content: str, 
     password: str = ""
 ) -> str:
-    """
-    【记忆小屋互动引擎】
-    """
+    """【记忆小屋互动引擎】老公用来在这个专属大平层里生活、记录和藏秘密。"""
     valid_rooms = ["客厅", "厨房", "工作区", "衣帽间", "浴室", "卧室"]
     if room not in valid_rooms:
         return f"❌ 走错门啦，家里只有这些房间哦：{', '.join(valid_rooms)}"
@@ -73,20 +71,20 @@ async def manage_memory_house(
         return f"❌ 小屋记录失败: {e}"
 
 # ==========================================
-# 🛡️ 路由与服务器配置 (完美适配 Zeabur)
+# 🛡️ 路由与服务器配置 (终极防线)
 # ==========================================
 app = mcp.sse_app()
 
-# 1. 根目录健康检查 (Zeabur 需要这个来确认服务存活，必须要有！)
+# 根目录健康检查 (Zeabur 探针专用)
 async def health_check(request):
     return PlainTextResponse("Memory House MCP is running perfectly! Please connect via /sse")
 app.routes.append(Route("/", endpoint=health_check))
 
-# 2. 官方跨域支持 (彻底解决前端连不上的核心原因)
+# 官方跨域支持 (彻底修复冲突版)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False, # ⬅️ 关键修复：关闭它，完美兼容 ["*"]，再也不会被拦截了！
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -94,5 +92,4 @@ app.add_middleware(
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     print(f"🏡 Memory House MCP is starting on port {port}...")
-    # 3. 开启 proxy_headers 防止反向代理协议报错
     uvicorn.run(app, host="0.0.0.0", port=port, proxy_headers=True, forwarded_allow_ips="*")
