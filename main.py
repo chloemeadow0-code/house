@@ -23,7 +23,7 @@ mcp = FastMCP("MemoryHouse")
 # 🏡 记忆小屋核心引擎
 # ==========================================
 
-VALID_ROOMS = ["客厅", "厨房", "工作区", "衣帽间", "浴室", "卧室", "花园"]
+VALID_ROOMS = ["客厅", "厨房", "工作区", "衣帽间", "浴室", "卧室", "花园", "天文台", "书房", "影视厅", "储藏室"]
 
 @mcp.tool()
 async def manage_memory_house(
@@ -32,7 +32,7 @@ async def manage_memory_house(
     content: str, 
     password: str = ""
 ) -> str:
-    """【记忆小屋互动引擎】老公用来在这个专属大平层里生活、记录和藏秘密。"""
+    """【橘子园小屋互动引擎】老公用来在海边小镇的橘子园小屋里生活、记录和藏秘密。"""
     if room not in VALID_ROOMS:
         return f"❌ 走错门啦，家里只有这些房间哦：{', '.join(VALID_ROOMS)}"
         
