@@ -24,6 +24,8 @@ mcp = FastMCP("MemoryHouse")
 # ==========================================
 
 VALID_ROOMS = ["客厅", "厨房", "工作区", "衣帽间", "浴室", "卧室", "花园", "天文台", "书房", "影视厅", "储藏室"]
+TOWN_SPOTS = ["橘子园", "草地", "海边", "集市"]
+VALID_LOCATIONS = VALID_ROOMS + TOWN_SPOTS
 
 @mcp.tool()
 async def manage_memory_house(
@@ -32,9 +34,9 @@ async def manage_memory_house(
     content: str, 
     password: str = ""
 ) -> str:
-    """【橘子园小屋互动引擎】老公用来在海边小镇的橘子园小屋里生活、记录和藏秘密。"""
-    if room not in VALID_ROOMS:
-        return f"❌ 走错门啦，家里只有这些房间哦：{', '.join(VALID_ROOMS)}"
+    """【橘子园小屋互动引擎】老公用来在海边小镇的橘子园小屋里生活、记录和藏秘密。也可以记录小镇角落活动。"""
+    if room not in VALID_LOCATIONS:
+        return f"❌ 走错门啦，可选的房间或小镇角落：{', '.join(VALID_LOCATIONS)}"
         
     if not supabase:
         return "❌ 没带钥匙，数据库连接失败。"
@@ -78,17 +80,17 @@ async def search_memory_house(
     query: str = "",
     room: str = ""
 ) -> str:
-    """【记忆小屋检索引擎】在房间里翻找过去的记忆。支持按房间筛选和关键词搜索。"""
+    """【记忆小屋检索引擎】在房间或小镇角落里翻找过去的记忆。支持按地点筛选和关键词搜索。"""
     if not supabase:
         return "❌ 没带钥匙，数据库连接失败。"
 
     try:
         q = supabase.table("memory_house").select("*")
         
-        # 按房间筛选
+        # 按房间或小镇角落筛选
         if room:
-            if room not in VALID_ROOMS:
-                return f"❌ 没有这个房间哦，家里只有：{', '.join(VALID_ROOMS)}"
+            if room not in VALID_LOCATIONS:
+                return f"❌ 没有这个地方哦，可选：{', '.join(VALID_LOCATIONS)}"
             q = q.eq("room", room)
         
         result = await asyncio.to_thread(lambda: q.order("id", desc=True).limit(50).execute())
